@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HOANGSON - SƠN LỌ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --main: #ff2d8d; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --border: rgba(255, 255, 255, 0.1); --admin: #00ff88; --card-color: #ff7e00; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Lexend', sans-serif; transition: 0.3s; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); overflow-x: hidden; }
+        
+        /* Screens & Modals */
+        #introScreen, #authScreen, .modal { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(15px); background: rgba(15, 23, 42, 0.95); padding: 15px; }
+        .box { background: var(--card); padding: 25px; border-radius: 25px; border: 2px solid var(--main); text-align: center; width: 100%; max-width: 380px; box-shadow: 0 0 30px rgba(255, 45, 141, 0.2); }
+        
+        /* Header & Navigation */
+        header { height: 70px; background: var(--card); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 3px solid var(--main); position: sticky; top: 0; z-index: 1000; }
+        .wallet { background: var(--main); padding: 8px 15px; border-radius: 20px; color: #fff; font-weight: 900; font-size: 14px; box-shadow: 0 0 10px rgba(255,45,141,0.5); }
+        
+        /* Grid & Cards */
+        .grid { display: grid; grid-template-columns: 1fr; gap: 20px; padding: 20px; max-width: 1200px; margin: auto; }
+        .p-card { background: var(--card); border-radius: 25px; padding: 25px; border: 2px solid var(--border); border-top: 6px solid var(--main); box-shadow: 0 10px 20px rgba(0,0,0,0.2); position: relative; }
+        
+        /* Side Menu */
+        #menu { position: fixed; top: 0; left: -100%; width: 85%; max-width: 320px; height: 100%; background: var(--card); z-index: 2000; padding: 20px; border-right: 4px solid var(--main); overflow-y: auto; }
+        .section { background: rgba(0,0,0,0.3); border-radius: 15px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
+        .sec-title { font-size: 11px; font-weight: 900; color: var(--main); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        /* Form Elements */
+        input, select, button, textarea { width: 100%; padding: 15px; margin: 8px 0; border-radius: 15px; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none; font-size: 15px; font-weight: bold; }
+        .btn-main { background: var(--main); border: none; font-weight: 900; cursor: pointer; color: white; text-transform: uppercase; box-shadow: 0 5px 15px rgba(255, 45, 141, 0.4); }
+        .btn-main:active { transform: scale(0.95); }
+        
+        /* UI Components */
+        .noti-item { font-size: 11px; padding: 12px; border-bottom: 1px solid #333; color: var(--admin); background: rgba(0,255,136,0.05); margin-bottom: 8px; border-radius: 10px; }
+        #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1500; }
+        .stock-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .s-box { flex: 1; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 12px; text-align: center; border: 1px solid var(--border); font-size: 12px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="introScreen"><div class="box">
+        <h1 style="color:var(--main); font-weight: 900; font-size: 35px;">HOANGSON</h1>
+        <p style="margin: 10px 0; opacity: 0.8; font-size: 14px;">Hệ thống cung cấp Key & Acc VIP</p>
+        <button class="btn-main" style="margin-top: 20px;" onclick="goToAuth()">BẮT ĐẦU NGAY</button>
+    </div></div>
+
+    <div id="authScreen" style="display:none"><div class="box">
+        <h2 id="authTitle" style="color:var(--main); margin-bottom:20px;">ĐĂNG NHẬP</h2>
+        <input id="uIn" placeholder="Tên tài khoản">
+        <input type="password" id="pIn" placeholder="Mật khẩu">
+        <button class="btn-main" onclick="handleAuth()">XÁC NHẬN</button>
+        <div style="display:flex; justify-content: space-between; margin-top:15px; font-size:12px;">
+            <p onclick="switchAuth()" id="switchText" style="cursor:pointer; opacity:0.8;">Chưa có nick? <b style="color:var(--main)">Đăng ký</b></p>
+            <p onclick="forgotPass()" style="cursor:pointer; color: #888;">Quên mật khẩu?</p>
+        </div>
+    </div></div>
+
+    <div id="app" style="display:none">
+        <header>
+            <div onclick="toggleM(true)" style="font-size:32px; cursor:pointer; color:var(--main)">☰</div>
+            <div style="font-weight:900; font-size: 20px; letter-spacing: 1px;">HOANGSON SHOP</div>
+            <div class="wallet">💰 <span id="balDisp">0</span>đ</div>
+        </header>
+
+        <div id="menu">
+            <h3 style="color:var(--main); margin-bottom:20px; font-size: 20px;">Chào, <span id="userDisp" style="color: #fff;"></span></h3>
+            
+            <div id="admPanel" style="display:none">
+                <div class="section" style="border-color: var(--admin);">
+                    <div class="sec-title" style="color:var(--admin)">🔔 DUYỆT NẠP THẺ</div>
+                    <div id="admNotiList"></div>
+                    <button class="btn-main" style="background:#444; font-size:10px; height: 35px; padding: 0;" onclick="data.notis=[]; save();">XÓA THÔNG BÁO</button>
+                </div>
+                <div class="section" style="border-color: #0068ff;">
+                    <div class="sec-title" style="color:#0068ff">🛠 QUẢN TRỊ VIÊN</div>
+                    <select id="aProd" onchange="updPl()"></select>
+                    <select id="aPlan"></select>
+                    <textarea id="aKey" placeholder="Mỗi dòng 1 key..." rows="3"></textarea>
+                    <button class="btn-main" style="background:#0068ff" onclick="addS()">NẠP KHO</button>
+                    <input id="aUser" placeholder="Tên khách">
+                    <input type="number" id="aAmt" placeholder="Số tiền cộng">
+                    <button class="btn-main" style="background:var(--admin); color:#000" onclick="addM()">CỘNG TIỀN</button>
+                </div>
+            </div>
+
+            <div class="section" style="border-color: var(--card-color);">
+                <div class="sec-title" style="color:var(--card-color)">🎟 NẠP THẺ CÀO</div>
+                <select id="cardType">
+                    <option value="Viettel">Viettel</option>
+                    <option value="Mobifone">Mobifone</option>
+                    <option value="Vinaphone">Vinaphone</option>
+                    <option value="Zing">Thẻ Zing</option>
+                    <option value="Garena">Thẻ Garena</option>
+                </select>
+                <select id="cardValue">
+                    <option value="10000">10,000đ</option>
+                    <option value="20000">20,000đ</option>
+                    <option value="50000">50,000đ</option>
+                    <option value="100000">100,000đ</option>
+                    <option value="200000">200,000đ</option>
+                    <option value="500000">500,000đ</option>
+                </select>
+                <input id="cardSeri" placeholder="Số Seri">
+                <input id="cardPin" placeholder="Mã thẻ">
+                <button class="btn-main" style="background: var(--card-color);" onclick="sendCard()">GỬI THẺ DUYỆT</button>
+            </div>
+
+            <div class="section">
+                <div class="sec-title">📋 LỊCH SỬ MUA</div>
+                <div id="hList"></div>
+            </div>
+
+            <button onclick="logout()" style="background:none; color:#ff4757; border:2px solid #ff4757; padding:15px; width:100%; border-radius:15px; font-weight:900; margin-top: 20px;">ĐĂNG XUẤT</button>
+        </div>
+
+        <div class="grid" id="sGrid"></div>
+    </div>
+
+    <div id="kModal" class="modal" style="display:none"><div class="box">
+        <h2 style="color:var(--main)">MUA THÀNH CÔNG</h2>
+        <div id="kRes" style="background:#000; padding:15px; border-radius:15px; margin:15px 0; word-break:break-all; font-family:monospace; color:var(--main); border:2px solid #333; font-size: 18px;"></div>
+        <button class="btn-main" onclick="copyK()">COPY KEY</button>
+        <button onclick="document.getElementById('kModal').style.display='none'" style="background:none; border:none; color:gray; margin-top:15px; cursor:pointer; font-weight: bold;">ĐÓNG</button>
+    </div></div>
+    
+    <div id="overlay" onclick="toggleM(false)"></div>
+
+    <script>
+        const DB_KEY = 'VINHMOD_V1600_DB';
+        const ADMIN_NAME = "Hoàng Sơn"; 
+
+        let isLog = true;
+        let data = JSON.parse(localStorage.getItem(DB_KEY)) || {
+            users: { "HOANGSON": { p: "HS1234hs", b: 7539999, admin: true, buys: [] } },
+            notis: [],
+            prods: [
+                { id: 0, n: "Hopper Plus", pl: {"1 Ngày": 10000, "7 Ngày": 150000}, st: {"1 Ngày":[], "7 Ngày":[]}, so:0 },
+                { id: 1, n: "Zed ping", pl: {"1 Ngày": 5000, "7 Ngày": 80000, "30 Ngày": 120000, "vĩnh viễn": 150000}, st: {"1 Ngày":[], "7 Ngày":[], "30 Ngày":[], "vĩnh viễn":[]}, so:0 },
+                { id: 2, n: "Acc Clone Lv 5", pl: {"Mặc định": 5000}, st: {"Mặc định":[]}, so:0 }
+            ]
+        };
+        let user = localStorage.getItem('VSS');
+
+        function goToAuth() { document.getElementById('introScreen').style.display='none'; document.getElementById('authScreen').style.display='flex'; }
+        function save() { localStorage.setItem(DB_KEY, JSON.stringify(data)); if(user) render(); }
+        
+        function switchAuth() { 
+            isLog = !isLog; 
+            document.getElementById('authTitle').innerText = isLog ? "ĐĂNG NHẬP" : "ĐĂNG KÝ";
+            document.getElementById('switchText').innerHTML = isLog ? "Chưa có nick? <b style='color:var(--main)'>Đăng ký</b>" : "Đã có nick? <b style='color:var(--main)'>Đăng nhập</b>";
+        }
+
+        function handleAuth() {
+            let uInput = document.getElementById('uIn').value.trim();
+            let p = document.getElementById('pIn').value.trim();
+            if(!uInput || !p) return alert("Điền đủ thông tin sếp ơi!");
+            
+            if(isLog) {
+                if(data.users[uInput] && data.users[uInput].p === p) { 
+                    user = uInput; 
+                    localStorage.setItem('VSS', uInput); 
+                    render(); 
+                } else alert("Sai tài khoản hoặc mật khẩu!");
+            } else {
+                if(data.users[uInput]) return alert("Tên này đã tồn tại!");
+                data.users[uInput] = { p: p, b: 0, admin: (uInput === ADMIN_NAME || uInput === "HOANGSON"), buys: [] };
+                save(); isLog=true; switchAuth(); alert("Đăng ký thành công!");
+            }
+        }
+
+        function forgotPass() {
+            let u = document.getElementById('uIn').value.trim();
+            window.open(`https://zalo.me/0364684151?text=${encodeURIComponent('Quên mật khẩu tài khoản: ' + u)}`, '_blank');
+        }
+
+        function render() {
+            document.getElementById('introScreen').style.display='none'; 
+            document.getElementById('authScreen').style.display='none'; 
+            document.getElementById('app').style.display='block';
+            document.getElementById('userDisp').innerText = user; 
+            document.getElementById('balDisp').innerText = data.users[user].b.toLocaleString();
+
+            if(data.users[user].admin) { 
+                document.getElementById('admPanel').style.display='block'; 
+                document.getElementById('aProd').innerHTML = data.prods.map(p=>`<option value="${p.id}">${p.n}</option>`).join('');
+                document.getElementById('admNotiList').innerHTML = data.notis.map(n => `<div class="noti-item"><b>${n.u}</b>: ${n.type} ${n.v}đ <br><small>${n.info || ''}</small></div>`).join('') || '<small>Trống</small>';
+                updPl();
+            } else { document.getElementById('admPanel').style.display='none'; }
+
+            let h = "";
+            data.prods.forEach(p => {
+                let totalStock = 0;
+                for (let plan in p.st) { totalStock += p.st[plan].length; }
+
+                h += `
+                <div class="p-card">
+                    <div style="font-weight:900; color:var(--main); font-size:24px; margin-bottom:12px;">${p.n}</div>
+                    <div class="stock-row">
+                        <div class="s-box" style="border-color:var(--admin); color:var(--admin)">KHO: ${totalStock}</div>
+                        <div class="s-box">BÁN: ${p.so}</div>
+                    </div>
+                    <select id="sel-${p.id}">
+                        ${Object.keys(p.pl).map(k => {
+                            let count = p.st[k] ? p.st[k].length : 0;
+                            return `<option value="${k}">${k} - ${p.pl[k].toLocaleString()}đ (${count})</option>`;
+                        }).join('')}
+                    </select>
+                    <button class="btn-main" style="margin-top:10px;" onclick="buy(${p.id})">MUA NGAY</button>
+                </div>`;
+            });
+            document.getElementById('sGrid').innerHTML = h;
+            document.getElementById('hList').innerHTML = data.users[user].buys.map((b,i)=>`
+                <div style="padding:10px; border-bottom:1px solid #333; font-size:12px;">
+                    <b>${b.n}</b> [${b.p}]<br><span style="color:var(--main); cursor:pointer;" onclick="viewK(${i})">[XEM KEY]</span>
+                </div>`).join('');
+        }
+
+        function updPl() { 
+            let pIdx = document.getElementById('aProd').value;
+            let p = data.prods[pIdx]; 
+            document.getElementById('aPlan').innerHTML = Object.keys(p.pl).map(k=>`<option value="${k}">${k}</option>`).join(''); 
+        }
+
+        function buy(id) {
+            let p = data.prods[id], pl = document.getElementById(`sel-${id}`).value;
+            if(data.users[user].b < p.pl[pl]) return alert("Bạn không đủ tiền!");
+            if(!p.st[pl] || p.st[pl].length == 0) return alert("Gói này đang hết hàng!");
+            let k = p.st[pl].shift(); 
+            data.users[user].b -= p.pl[pl]; 
+            p.so++;
+            data.users[user].buys.unshift({n:p.n, p:pl, k:k}); 
+            save();
+            document.getElementById('kRes').innerText = k; 
+            document.getElementById('kModal').style.display='flex';
+        }
+
+        function sendCard() {
+            let type = document.getElementById('cardType').value;
+            let val = document.getElementById('cardValue').value;
+            let s = document.getElementById('cardSeri').value.trim();
+            let p = document.getElementById('cardPin').value.trim();
+            if(!s || !p) return alert("Điền đủ Seri/Mã!");
+            data.notis.unshift({ u: user, v: parseInt(val).toLocaleString(), type: type, info: `S:${s} | M:${p}`, t: new Date().toLocaleString() });
+            document.getElementById('cardSeri').value=""; document.getElementById('cardPin').value="";
+            save(); alert("Đã gửi thẻ! Đợi sếp duyệt.");
+        }
+
+        function addS() { 
+            let id=document.getElementById('aProd').value, pl=document.getElementById('aPlan').value, kStr=document.getElementById('aKey').value.trim();
+            if(!kStr) return;
+            kStr.split('\n').filter(k => k.trim() !== "").forEach(k => { data.prods[id].st[pl].push(k.trim()); });
+            save(); document.getElementById('aKey').value=""; alert("Nạp kho xong!");
+        }
+
+        function addM() { 
+            let u=document.getElementById('aUser').value.trim(), a=parseInt(document.getElementById('aAmt').value); 
+            if(data.users[u]){ data.users[u].b += a; save(); alert("Cộng tiền xong!"); } else alert("Không thấy khách!");
+        }
+
+        function logout() { localStorage.removeItem('VSS'); location.reload(); }
+        function toggleM(s) { document.getElementById('menu').style.left=s?'0':'-100%'; document.getElementById('overlay').style.display=s?'block':'none'; }
+        function viewK(i) { document.getElementById('kRes').innerText = data.users[user].buys[i].k; document.getElementById('kModal').style.display='flex'; }
+        function copyK() { navigator.clipboard.writeText(document.getElementById('kRes').innerText); alert("Đã copy!"); }
+        
+        window.addEventListener('beforeunload', save);
+        if(user) render();
+    </script>
+</body>
+</html>
